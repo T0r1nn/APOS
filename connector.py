@@ -1,10 +1,11 @@
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QLineEdit, QLabel, QVBoxLayout, QGridLayout, QStackedWidget, QCheckBox
 from PyQt6.QtCore import QSize, Qt
-from PyQt6.QtGui import QIcon, QPixmap
+from PyQt6.QtGui import QIcon, QPixmap, QIntValidator
 
 import sys
 import random
 from typing import List
+import textclientconnect
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -33,21 +34,22 @@ class MainWindow(QMainWindow):
 
         #setup char select screen
         char_select_grid = QGridLayout(self.char_select_screen)
-        character_select_widgets : List[QPushButton] = [QPushButton("Random")]
+        self.character_select_widgets : List[QPushButton] = [QPushButton("Random")]
         self.characters = ["Juliette", "Kai", "Dubu", "Estelle", "Atlas", "Juno", "Drek_ar", "Rune", "X", "Era", "Luna", "Ai.Mi", "Asher", "Zentaro", "Rasmus", "Octavia", "Vyce", "Finii", "Kazan", "Nao", "Mako"]
         for character in self.characters:
-            character_select_widgets.append(QPushButton())
-            character_select_widgets[-1].setIcon(QIcon(f"./assets/CloseUp_{character}.png"))
-            character_select_widgets[-1].clicked.connect(lambda _,ch=character:self.character_select_button_pressed(ch))
+            self.character_select_widgets.append(QPushButton())
+            self.character_select_widgets[-1].setIcon(QIcon(f"./assets/CloseUp_{character}.png"))
+            self.character_select_widgets[-1].clicked.connect(lambda _,ch=character:self.character_select_button_pressed(ch))
+            self.character_select_widgets[-1].setEnabled(textclientconnect.check_character_unlocked(character))
         
-        character_select_widgets[0].setFixedHeight(83)
-        character_select_widgets[0].clicked.connect(lambda: self.character_select_button_pressed("Random"))
+        self.character_select_widgets[0].setFixedHeight(83)
+        self.character_select_widgets[0].clicked.connect(lambda: self.character_select_button_pressed("Random"))
 
-        for i in range(len(character_select_widgets)):
-            character_select_widgets[i].setIconSize(QSize(75,75))
+        for i in range(len(self.character_select_widgets)):
+            self.character_select_widgets[i].setIconSize(QSize(75,75))
             x = i%6
             y = (i-x)/6
-            char_select_grid.addWidget(character_select_widgets[i], int(y), x)
+            char_select_grid.addWidget(self.character_select_widgets[i], int(y), x)
 
         #setup show selected character screen
         show_char_layout = QVBoxLayout(self.show_selected_char)
@@ -80,8 +82,7 @@ class MainWindow(QMainWindow):
             self.labels.append(temp)
             layout.addWidget(self.labels[i])
             self.text_boxes.append(QLineEdit())
-            self.text_boxes[i].setInputMask("9999")
-            self.text_boxes[i].setText("0000")
+            self.text_boxes[i].setValidator(QIntValidator(0,999))
             layout.addWidget(self.text_boxes[i])
 
         submit_button = QPushButton("Submit")
@@ -92,6 +93,9 @@ class MainWindow(QMainWindow):
 
     def connect_button_clicked(self):
         self.mainScreen.setCurrentWidget(self.char_select_screen)
+        textclientconnect.update_items()
+        for i in range(1, len(self.character_select_widgets)):
+            self.character_select_widgets[i].setEnabled(textclientconnect.check_character_unlocked(self.characters[i-1]))
     
     def disconnect_button_clicked(self):
         self.mainScreen.setCurrentWidget(self.connect_screen)
@@ -100,14 +104,15 @@ class MainWindow(QMainWindow):
         data = {"Character": self.character, "Won": self.victory_check.isChecked()}
         self.victory_check.setChecked(False)
         for i in range(len(self.text_boxes)):
-            data[self.label_names[i]] = self.text_boxes[i].text()
+            data[self.label_names[i]] = int(self.text_boxes[i].text())
             self.text_boxes[i].setText("0000")
         print(data)
+        textclientconnect.send_checks(data)
         self.mainScreen.setCurrentWidget(self.char_select_screen)
     
     def character_select_button_pressed(self, character: str):
         if character == "Random":
-            character = random.choice(self.characters) #TODO: Randomly select a character
+            character = random.choice(textclientconnect.get_unlocked_characters())
         self.character = character
         self.char_icon.setPixmap(QPixmap(f"./assets/CloseUp_{character}.png"))
         self.mainScreen.setCurrentWidget(self.show_selected_char)
