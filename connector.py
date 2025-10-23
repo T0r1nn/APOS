@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QLineEdit, QLabel, QVBoxLayout, QGridLayout, QStackedWidget, QCheckBox
-from PyQt6.QtCore import QSize, Qt
+from PyQt6.QtCore import QSize, Qt, QTimer, QTimerEvent
 from PyQt6.QtGui import QIcon, QPixmap, QIntValidator
 
 import sys
@@ -10,6 +10,10 @@ import textclientconnect
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        update_timer = QTimer(self)
+        update_timer.timeout.connect(self.timer_tick)
+        update_timer.start(1000)
+
         self.character = ""
 
         self.mainScreen = QStackedWidget()
@@ -88,8 +92,13 @@ class MainWindow(QMainWindow):
         submit_button = QPushButton("Submit")
         layout.addWidget(submit_button)
         submit_button.clicked.connect(self.submit_button_clicked)
-        
 
+    def timer_tick(self):
+        print("Here")
+        if self.mainScreen.currentWidget() == self.char_select_screen:
+            textclientconnect.update_items()
+            for i in range(1, len(self.character_select_widgets)):
+                self.character_select_widgets[i].setEnabled(textclientconnect.check_character_unlocked(self.characters[i-1]))
 
     def connect_button_clicked(self):
         self.mainScreen.setCurrentWidget(self.char_select_screen)
@@ -105,7 +114,7 @@ class MainWindow(QMainWindow):
         self.victory_check.setChecked(False)
         for i in range(len(self.text_boxes)):
             data[self.label_names[i]] = int(self.text_boxes[i].text())
-            self.text_boxes[i].setText("0000")
+            self.text_boxes[i].setText("")
         print(data)
         textclientconnect.send_checks(data)
         self.mainScreen.setCurrentWidget(self.char_select_screen)
