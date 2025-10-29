@@ -11,6 +11,7 @@ saves_x = 80
 kos_x = 2
 redirects_x = 100
 orbs_x = 30
+prev_lp = 0
 
 def check_character_unlocked(character: str) -> bool:
     return character in unlocked_items.keys()
@@ -64,6 +65,9 @@ def update_items():
                         unlocked_items[item_name] = 1
                     f.close()
     check_victory()
+    if(unlocked_items['LP'] > prev_lp):
+        prev_lp = unlocked_items['LP']
+        print(f"Gotten {prev_lp} lp out of {required_lp_count} needed for victory")
 
 def check_config():
     global required_lp_count, kos_x, orbs_x, saves_x, redirects_x, goals_plus_assists_x
