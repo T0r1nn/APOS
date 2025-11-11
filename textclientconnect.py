@@ -45,6 +45,7 @@ def get_unlocked_characters() -> List[str]:
     for key in unlocked_items.keys():
         if key != "LP":
             chars.append(key)
+    return chars
 
 def update_items():
     if required_lp_count == 0:
@@ -56,7 +57,6 @@ def update_items():
             if file.startswith("AP"):
                 with open(os.path.join(game_communication_path, file), 'r') as f:
                     item_id = int(f.readline())
-                    print(item_id)
                     item_name = item_id_to_name_map[item_id]
                     if item_name in unlocked_items.keys():
                         unlocked_items[item_name]+=1
