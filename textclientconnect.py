@@ -65,6 +65,7 @@ def update_items():
                         unlocked_items[item_name] = 1
                     f.close()
     check_victory()
+    global prev_lp
     if(unlocked_items['LP'] > prev_lp):
         prev_lp = unlocked_items['LP']
         print(f"Gotten {prev_lp} lp out of {required_lp_count} needed for victory")
