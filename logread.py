@@ -75,3 +75,7 @@ class LogWatcher:
         with open(self.file, "r") as file:
             recent_line = file.readlines()[-1]
             return self.getTimestampFromLine(recent_line)
+
+watch = LogWatcher()
+
+print(watch.most_recent_timestamp, watch.checkHasPlayedGame(), watch.getLastGameInfo())

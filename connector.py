@@ -22,11 +22,11 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.mainScreen)
 
-        #self.watcher = logread.LogWatcher()
+        self.watcher = logread.LogWatcher()
 
-        #watcher_timer = QTimer(self)
-        #watcher_timer.timeout.connect(self.watcher_tick)
-        #watcher_timer.start(5000)
+        watcher_timer = QTimer(self)
+        watcher_timer.timeout.connect(self.watcher_tick)
+        watcher_timer.start(5000)
 
         self.setWindowTitle("OS Client")
         self.setFixedSize(QSize(800,450))
@@ -142,7 +142,6 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-
     args = sys.argv[1:]
     arg_dict = {}
     valid_args = ["cumulative","kos","saves","redirects","orbs","goals_assists"]
