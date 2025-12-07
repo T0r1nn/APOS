@@ -9,13 +9,14 @@ import textclientconnect
 import logread
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, arg_dict):
         super().__init__()
         update_timer = QTimer(self)
         update_timer.timeout.connect(self.timer_tick)
         update_timer.start(1000)
 
         self.character = ""
+        self.arg_dict = arg_dict
 
         self.mainScreen = QStackedWidget()
 
@@ -115,6 +116,8 @@ class MainWindow(QMainWindow):
     def connect_button_clicked(self):
         self.mainScreen.setCurrentWidget(self.char_select_screen)
         textclientconnect.update_items()
+        textclientconnect.process_args(self.arg_dict)
+        print(textclientconnect.saves_x, textclientconnect.redirects_x, textclientconnect.orbs_x, textclientconnect.kos_x, textclientconnect.goals_plus_assists_x)
         for i in range(1, len(self.character_select_widgets)):
             self.character_select_widgets[i].setEnabled(textclientconnect.check_character_unlocked(self.characters[i-1]))
     
@@ -139,8 +142,18 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
+    args = sys.argv[1:]
+    arg_dict = {}
+    valid_args = ["cumulative","kos","saves","redirects","orbs","goals_assists"]
+    for arg in args:
+        arg_parts = arg[2:].split("=")
+        if arg_parts[0] not in valid_args:
+            raise AttributeError(f"Command line argument {arg_parts[0]} invalid, valid arguments are: {(', '.join(valid_args))}")
+        arg_dict[arg_parts[0]] = int(arg_parts[1])
 
-    window = MainWindow()
+    print(arg_dict)
+
+    window = MainWindow(arg_dict)
     window.show()
 
     app.exec()

@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 import os
 
 unlocked_items = {}
@@ -37,7 +37,7 @@ def send_checks(data):
 
 def check_victory():
     if "LP" in unlocked_items.keys():
-        if unlocked_items["LP"] > required_lp_count:
+        if unlocked_items["LP"] >= required_lp_count:
             with open(os.path.join(game_communication_path, "victory"), "w") as f:
                 f.close()
 
@@ -51,8 +51,8 @@ def get_unlocked_characters() -> List[str]:
 def update_items():
     if required_lp_count == 0:
         check_config()
-    global unlocked_items
-    unlocked_items = {}
+    global unlocked_items, prev_lp
+    unlocked_items = {"LP":0}
     for root, dirs, files in os.walk(game_communication_path):
         for file in files:
             if file.startswith("AP"):
@@ -84,3 +84,16 @@ def check_config():
         redirects_x = int(f.readline())
     with open(os.path.join(game_communication_path, "Required_GoalsAssists.cfg"), "r") as f:
         goals_plus_assists_x = int(f.readline())
+
+def process_args(arg_dict: Dict[str, int]) -> None:
+    global saves_x, orbs_x, redirects_x, kos_x, goals_plus_assists_x
+    if "saves" in arg_dict.keys():
+        saves_x = arg_dict["saves"]
+    if "orbs" in arg_dict.keys():
+        orbs_x = arg_dict["orbs"]
+    if "kos" in arg_dict.keys():
+        kos_x = arg_dict["kos"]
+    if "redirects" in arg_dict.keys():
+        redirects_x = arg_dict["redirects"]
+    if "goals_assists" in arg_dict.keys():
+        goals_plus_assists_x = arg_dict["goals_assists"]
