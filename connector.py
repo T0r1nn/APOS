@@ -6,19 +6,27 @@ import sys
 import random
 from typing import List
 import textclientconnect
+import logread
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, arg_dict):
         super().__init__()
         update_timer = QTimer(self)
         update_timer.timeout.connect(self.timer_tick)
         update_timer.start(1000)
 
         self.character = ""
+        self.arg_dict = arg_dict
 
         self.mainScreen = QStackedWidget()
 
         self.setCentralWidget(self.mainScreen)
+
+        #self.watcher = logread.LogWatcher()
+
+        #watcher_timer = QTimer(self)
+        #watcher_timer.timeout.connect(self.watcher_tick)
+        #watcher_timer.start(5000)
 
         self.setWindowTitle("OS Client")
         self.setFixedSize(QSize(800,450))
@@ -94,15 +102,22 @@ class MainWindow(QMainWindow):
         submit_button.clicked.connect(self.submit_button_clicked)
 
     def timer_tick(self):
-        print("Here")
         if self.mainScreen.currentWidget() == self.char_select_screen:
             textclientconnect.update_items()
             for i in range(1, len(self.character_select_widgets)):
                 self.character_select_widgets[i].setEnabled(textclientconnect.check_character_unlocked(self.characters[i-1]))
 
+    def watcher_tick(self):
+        if self.watcher.checkHasPlayedGame():
+            self.watcher.most_recent_timestamp = self.watcher.getMostRecentTimestamp()
+            data = self.watcher.getLastGameInfo()
+            print(data)
+
     def connect_button_clicked(self):
         self.mainScreen.setCurrentWidget(self.char_select_screen)
         textclientconnect.update_items()
+        textclientconnect.process_args(self.arg_dict)
+        print(textclientconnect.saves_x, textclientconnect.redirects_x, textclientconnect.orbs_x, textclientconnect.kos_x, textclientconnect.goals_plus_assists_x)
         for i in range(1, len(self.character_select_widgets)):
             self.character_select_widgets[i].setEnabled(textclientconnect.check_character_unlocked(self.characters[i-1]))
     
@@ -115,7 +130,6 @@ class MainWindow(QMainWindow):
         for i in range(len(self.text_boxes)):
             data[self.label_names[i]] = int(self.text_boxes[i].text())
             self.text_boxes[i].setText("")
-        print(data)
         textclientconnect.send_checks(data)
         self.mainScreen.setCurrentWidget(self.char_select_screen)
     
@@ -126,9 +140,21 @@ class MainWindow(QMainWindow):
         self.char_icon.setPixmap(QPixmap(f"./assets/CloseUp_{character}.png"))
         self.mainScreen.setCurrentWidget(self.show_selected_char)
 
-app = QApplication(sys.argv)
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
 
-window = MainWindow()
-window.show()
+    args = sys.argv[1:]
+    arg_dict = {}
+    valid_args = ["cumulative","kos","saves","redirects","orbs","goals_assists"]
+    for arg in args:
+        arg_parts = arg[2:].split("=")
+        if arg_parts[0] not in valid_args:
+            raise AttributeError(f"Command line argument {arg_parts[0]} invalid, valid arguments are: {(', '.join(valid_args))}")
+        arg_dict[arg_parts[0]] = int(arg_parts[1])
 
-app.exec()
+    print(arg_dict)
+
+    window = MainWindow(arg_dict)
+    window.show()
+
+    app.exec()
